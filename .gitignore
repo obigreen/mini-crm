@@ -1,0 +1,22 @@
+# ОС и IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Env файлы
+.env
+.env.local
+.env.development
+.env.production
+
+# Build артефакты
+dist/
+build/
+coverage/
+*.log
