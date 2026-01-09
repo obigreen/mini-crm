@@ -1,22 +1,15 @@
 import Fastify from "fastify";
 import dotenv from "dotenv";
 import { z } from "zod";
-
 import { connectDB } from "./db.js";
 import healthRoute from "./routes/health.js";
-
 import authRoutes from "./modules/auth/auth.routes.js";
 import leadRoutes from "./modules/leads/lead.routes.js";
-
 import fastifyCookie from "@fastify/cookie";
 import { fastifyJwt } from "@fastify/jwt";
 
 dotenv.config();
 
-/**
- * 1) Валидируем env сразу при старте
- * Это "профессиональная защита" от ситуации, когда сервер запускается в сломанном состоянии.
- */
 const envSchema = z.object({
     PORT: z.coerce.number().default(3000),
     HOST: z.string().default("0.0.0.0"),
@@ -25,30 +18,13 @@ const envSchema = z.object({
 });
 
 const env = envSchema.parse(process.env);
-
-/**
- * 2) Создаём сервер Fastify
- * logger: true — чтобы видеть логи запросов/ошибок
- */
 const fastify = Fastify({ logger: true });
 
-/**
- * 3) Регистрируем cookie (нужно для refreshToken в cookie)
- */
 await fastify.register(fastifyCookie);
-
-/**
- * 4) Регистрируем JWT (ОДИН раз!)
- * fastify-jwt добавляет request.jwtVerify() и request.user
- */
 await fastify.register(fastifyJwt, {
     secret: env.JWT_SECRET,
 });
 
-/**
- * 5) Делаем один-единственный декоратор authenticate (ОДИН раз!)
- * Он будет использоваться в preHandler защищённых маршрутов.
- */
 fastify.decorate("authenticate", async (request, reply) => {
     try {
         await request.jwtVerify();
@@ -58,10 +34,7 @@ fastify.decorate("authenticate", async (request, reply) => {
     }
 });
 
-/**
- * 6) Простой CORS-хук (чтобы фронт мог стучаться в API с другого порта/домена)
- * Мы позже можем заменить на @fastify/cors, но пока — учебная версия.
- */
+
 fastify.addHook("onSend", async (request, reply, payload) => {
     reply.header("Access-Control-Allow-Origin", request.headers.origin || "*");
     reply.header("Access-Control-Allow-Credentials", "true");
@@ -78,21 +51,13 @@ fastify.addHook("onSend", async (request, reply, payload) => {
     return payload;
 });
 
-/**
- * 7) Подключаемся к MongoDB
- */
-await connectDB(env.MONGO_URL);
 
-/**
- * 8) Регистрируем маршруты
- */
+await connectDB(env.MONGO_URL);
 await fastify.register(healthRoute);
 await fastify.register(authRoutes);
 await fastify.register(leadRoutes);
 
-/**
- * 9) Старт сервера
- */
+
 const start = async () => {
     try {
         await fastify.listen({ port: env.PORT, host: env.HOST });
