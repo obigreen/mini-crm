@@ -1,5 +1,5 @@
 import {z} from 'zod';
-import {Lead} from './lead.model';
+import {Lead} from './lead.model.js';
 
 
 // -----------------------------
@@ -29,7 +29,7 @@ export default async function leadRoutes(fastify) {
     // -------------------------------
     // ✅ CREATE — СОЗДАТЬ ЛИД
     // -------------------------------
-    fastify.post("api/leads", {preHandler: [fastify.authenticate]}, async (request, reply) => {
+    fastify.post("/api/leads", {preHandler: [fastify.authenticate]}, async (request, reply) => {
         const parsed = createLeadSchema.safeParse(request.body);
         if (!parsed.success) {
             return reply.code(400).send({error: "Invalid data", details: parsed.error.errors});
