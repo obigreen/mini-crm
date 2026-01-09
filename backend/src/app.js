@@ -1,5 +1,6 @@
 import Fastify from 'fastify';
 import dotenv from 'dotenv';
+import leadRoutes from "./modules/leads/lead.routes.js";
 // Библиотека для валидации JWT
 import { z } from 'zod';
 import {connectDB} from './db.js';
@@ -71,6 +72,7 @@ fastify.decorate('authenticate', async (request, reply) => {
 
 await fastify.register(healthRoute);
 await fastify.register(authRoutes);
+await fastify.register(leadRoutes);
 
 const start = async () => {
     // try {
