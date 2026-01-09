@@ -11,6 +11,3 @@ export async function hashPassword(password) {
 export async function comparePassword(password, hash) {
     return bcrypt.compare(password, hash);
 }
-
-
-//todo - все для чата углубление в новой инфраструктуре ИИ, см. стикер + конспект

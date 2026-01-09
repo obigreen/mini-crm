@@ -15,6 +15,7 @@ const loginSchema = z.object({
     password: z.string().min(6)
 });
 
+
 export default async function authRoutes(fastify) {
 
     // ---------------------
@@ -22,12 +23,11 @@ export default async function authRoutes(fastify) {
     // ---------------------
     const issueTokens = (user) => {
         const payload = { id: user._id.toString(), role: user.role };
-
         const token = fastify.jwt.sign(payload, { expiresIn: '15m' });
         const refreshToken = fastify.jwt.sign(payload, { expiresIn: '7d' });
-
         return { token, refreshToken };
     };
+
 
     // ---------------------
     // 📌 Установка refresh-token в cookie
@@ -41,6 +41,7 @@ export default async function authRoutes(fastify) {
         });
     };
 
+
     // --------------------------
     // 📍 РЕГИСТРАЦИЯ
     // --------------------------
@@ -49,22 +50,18 @@ export default async function authRoutes(fastify) {
         if (!parse.success) {
             return reply.code(400).send({ error: 'Invalid data', details: parse.error.errors });
         }
-
         const { email, password } = parse.data;
-
         const exist = await User.findOne({ email });
         if (exist) {
             return reply.code(400).send({ error: 'User already exists' });
         }
-
         const passwordHash = await hashPassword(password);
         const user = await User.create({ email, passwordHash });
-
         const { token, refreshToken } = issueTokens(user);
         setRefreshCookie(reply, refreshToken);
-
         return reply.send({ token, user: { id: user._id, email: user.email } });
     });
+
 
     // --------------------------
     // 📍 ЛОГИН
@@ -74,23 +71,20 @@ export default async function authRoutes(fastify) {
         if (!parse.success) {
             return reply.code(400).send({ error: 'Invalid data', details: parse.error.errors });
         }
-
         const { email, password } = parse.data;
         const user = await User.findOne({ email });
         if (!user) {
             return reply.code(400).send({ error: 'Invalid email or password' });
         }
-
         const ok = await comparePassword(password, user.passwordHash);
         if (!ok) {
             return reply.code(400).send({ error: 'Invalid email or password' });
         }
-
         const { token, refreshToken } = issueTokens(user);
         setRefreshCookie(reply, refreshToken);
-
         return reply.send({ token, user: { id: user._id, email: user.email } });
     });
+
 
     // --------------------------
     // 📍 ОБНОВЛЕНИЕ ACCESS-ТOКЕНА
@@ -100,24 +94,21 @@ export default async function authRoutes(fastify) {
         if (!refreshToken) {
             return reply.code(401).send({ error: 'Missing refresh token' });
         }
-
         try {
             const payload = await fastify.jwt.verify(refreshToken);
             const user = await User.findById(payload.id);
-
             if (!user) {
                 return reply.code(401).send({ error: 'User not found' });
             }
-
             const tokens = issueTokens(user);
             setRefreshCookie(reply, tokens.refreshToken);
-
             return reply.send({ token: tokens.token, user: { id: user._id, email: user.email } });
         } catch (error) {
             request.log.warn({ err: error }, 'Refresh token verification failed');
             return reply.code(401).send({ error: 'Invalid refresh token' });
         }
     });
+
 
     // --------------------------
     // 📍 ВЫХОД
@@ -126,6 +117,7 @@ export default async function authRoutes(fastify) {
         reply.clearCookie('refreshToken', { path: '/api/auth' });
         return reply.send({ success: true });
     });
+
 
     // --------------------------
     // 📍 ПРОФИЛЬ (пример защищённого маршрута)
