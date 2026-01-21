@@ -23,7 +23,7 @@ const leadSchema = new mongoose.Schema(
         },
         source: {
             type: String,
-            enum: ["landing", "chat", "ads", "manual"],
+            enum: ["landing", "chat", "ads", "manual", "telegram"],
             default: "landing",
         },
         comment: {
